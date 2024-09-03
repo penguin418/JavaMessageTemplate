@@ -211,6 +211,89 @@ class StringTemplateTest {
             assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
         }
 
+        @Test
+        @DisplayName("더 긴 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        public void longerTemplateComparison() {
+            Map<String, Long> results = new HashMap<>();
+            Random random = new Random();
+
+            // StringTemplate
+            StringTemplate stringTemplate = new StringTemplate.Builder()
+                    .append("Lorem ipsum ")
+                    .reserve("dolor", generateRandomString(random))
+                    .append(" amet, ")
+                    .reserve("consectetur", generateRandomString(random))
+                    .append(" elit, ")
+                    .reserve("sed", generateRandomString(random))
+                    .append(" do ")
+                    .reserve("eiusmod", generateRandomString(random))
+                    .append(" tempor ")
+                    .reserve("incididunt", generateRandomString(random))
+                    .append(" ut ")
+                    .reserve("labore", generateRandomString(random))
+                    .append(" et ")
+                    .reserve("dolore", generateRandomString(random))
+                    .append(" et ")
+                    .reserve("dolore1", generateRandomString(random))
+                    .append(" et ")
+                    .reserve("dolore2", generateRandomString(random))
+                    .append(" magna aliqua.")
+                    .build();
+            long durationStringTemplate = measureTime(() -> {
+                String result = stringTemplate.process(Map.of(
+                        "dolor", generateRandomString(random),
+                        "consectetur", generateRandomString(random),
+                        "sed", generateRandomString(random),
+                        "eiusmod", generateRandomString(random),
+                        "incididunt", generateRandomString(random),
+                        "labore", generateRandomString(random),
+                        "dolore", generateRandomString(random),
+                        "dolore1", generateRandomString(random),
+                        "dolore2", generateRandomString(random)
+                ));
+            });
+            results.put("durationStringTemplate", durationStringTemplate);
+
+            // StringBuilder
+            long durationStringBuilder = measureTime(() -> {
+                String result = new StringBuilder().append("Lorem ipsum ")
+                        .append(generateRandomString(random))
+                        .append(" amet, ")
+                        .append(generateRandomString(random))
+                        .append(" elit, ")
+                        .append(generateRandomString(random))
+                        .append(" do ")
+                        .append(generateRandomString(random))
+                        .append(" tempor ")
+                        .append(generateRandomString(random))
+                        .append(" ut ")
+                        .append(generateRandomString(random))
+                        .append(" et ")
+                        .append(generateRandomString(random))
+                        .append(" et ")
+                        .append(generateRandomString(random))
+                        .append(" et ")
+                        .append(generateRandomString(random))
+                        .append(" magna aliqua.").toString();
+            });
+            results.put("durationStringBuilder", durationStringBuilder);
+
+            // StringFormat
+            long durationStringFormat = measureTime(() -> {
+                String result = String.format("Lorem ipsum %s amet, %s elit, %s do %s tempor %s ut %s et %s et %s et %s magna aliqua.",
+                        generateRandomString(random), generateRandomString(random), generateRandomString(random),
+                        generateRandomString(random), generateRandomString(random), generateRandomString(random), generateRandomString(random),generateRandomString(random),generateRandomString(random));
+            });
+            results.put("durationStringFormat", durationStringFormat);
+
+            // 출력
+            results.forEach((key, value) -> {
+                System.out.println(key + ": " + value + " ms");
+            });
+
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
+        }
+
 
         private static String generateRandomString(Random random) {
             String characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
