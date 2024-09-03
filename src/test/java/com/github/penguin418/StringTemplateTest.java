@@ -44,8 +44,6 @@ class StringTemplateTest {
             Random random = new Random();
 
             // StringTemplate
-            System.gc();
-            long startTime = System.nanoTime();
             StringTemplate stringTemplate = new StringTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", generateRandomString(random))
@@ -53,37 +51,26 @@ class StringTemplateTest {
                     .reserve("consectetur", generateRandomString(random))
                     .append(" elit.")
                     .build();
-            Map<String, String> map = new HashMap<>();
-            for (int i = 0; i < ITERATIONS; i++) {
-                map.put("dolor", generateRandomString(random));
-                map.put("consectetur", generateRandomString(random));
-                String result = stringTemplate.process(map);
-            }
-            long endTime = System.nanoTime();
-            long durationStringTemplate = (endTime - startTime) / ITERATIONS;
+            long durationStringTemplate = measureTime(()->{
+                String result = stringTemplate.process(Map.of("dolor", generateRandomString(random), "consectetur", generateRandomString(random)));
+            });
             results.put("durationStringTemplate", durationStringTemplate);
 
             // StringBuilder
-            System.gc();
-            startTime = System.nanoTime();
-            for (int i = 0; i < ITERATIONS; i++) {
+            long durationStringBuilder = measureTime(()->{
                 String result = new StringBuilder().append("Lorem ipsum ")
                         .append(generateRandomString(random))
                         .append(" amet, ")
                         .append(generateRandomString(random))
                         .append(" elit.").toString();
-            }
-            endTime = System.nanoTime();
-            results.put("durationStringBuilder", (endTime - startTime) / ITERATIONS);
+            });
+            results.put("durationStringBuilder", durationStringBuilder);
 
             // StringFormat
-            System.gc();
-            startTime = System.nanoTime();
-            for (int i = 0; i < ITERATIONS; i++) {
+            long durationStringFormat = measureTime(()->{
                 String result = String.format("Lorem ipsum %s amet, %s elit.", generateRandomString(random), generateRandomString(random));
-            }
-            endTime = System.nanoTime();
-            results.put("durationStringFormat", (endTime - startTime) / ITERATIONS);
+            });
+            results.put("durationStringFormat", durationStringFormat);
 
 
             // 출력
@@ -101,6 +88,16 @@ class StringTemplateTest {
                 sb.append(characters.charAt(random.nextInt(characters.length())));
             }
             return sb.toString();
+        }
+
+        private static long measureTime(Runnable task) {
+            System.gc();
+            long startTime = System.nanoTime();
+            for (int i = 0; i < ITERATIONS; i++) {
+                task.run();
+            }
+            long endTime = System.nanoTime();
+            return (endTime - startTime) / ITERATIONS;
         }
     }
 
