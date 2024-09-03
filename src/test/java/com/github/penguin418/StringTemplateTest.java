@@ -19,15 +19,15 @@ class StringTemplateTest {
         @DisplayName("다른 값으로 매핑하더라도, 원본 템플릿은 변하면 안된다")
         void processTest() {
             StringTemplate st = new StringTemplate.Builder()
-                    .append("My name is ")
-                    .reserve("name", "John")
-                    .append(". My age is ")
-                    .reserve("age", "20")
-                    .append(".")
+                    .append("Lorem ipsum ")
+                    .reserve("dolor", "sit")
+                    .append(" amet, ")
+                    .reserve("consectetur", "adipiscing")
+                    .append(" elit.")
                     .build();
-            assertEquals("My name is John. My age is 20.", st.process(Map.of()));
-            assertEquals("My name is Merry. My age is 30.", st.process(Map.of("name", "Merry", "age", "30")));
-            assertEquals("My name is John. My age is 20.", st.process(Map.of()));
+            assertEquals("Lorem ipsum sit amet, adipiscing elit.", st.process(Map.of()));
+            assertEquals("Lorem ipsum dolor amet, elit elit.", st.process(Map.of("dolor", "dolor", "consectetur", "elit")));
+            assertEquals("Lorem ipsum sit amet, adipiscing elit.", st.process(Map.of()));
         }
     }
 
@@ -47,16 +47,16 @@ class StringTemplateTest {
             System.gc();
             long startTime = System.nanoTime();
             StringTemplate stringTemplate = new StringTemplate.Builder()
-                    .append("Hello, ")
-                    .reserve("name", generateRandomString(random))
-                    .append("! Welcome to ")
-                    .reserve("place", generateRandomString(random))
-                    .append(".")
+                    .append("Lorem ipsum ")
+                    .reserve("dolor", generateRandomString(random))
+                    .append(" amet, ")
+                    .reserve("consectetur", generateRandomString(random))
+                    .append(" elit.")
                     .build();
             Map<String, String> map = new HashMap<>();
             for (int i = 0; i < ITERATIONS; i++) {
-                map.put("name", generateRandomString(random));
-                map.put("place", generateRandomString(random));
+                map.put("dolor", generateRandomString(random));
+                map.put("consectetur", generateRandomString(random));
                 String result = stringTemplate.process(map);
             }
             long endTime = System.nanoTime();
@@ -67,11 +67,11 @@ class StringTemplateTest {
             System.gc();
             startTime = System.nanoTime();
             for (int i = 0; i < ITERATIONS; i++) {
-                String result = new StringBuilder().append("Hello, ")
+                String result = new StringBuilder().append("Lorem ipsum ")
                         .append(generateRandomString(random))
-                        .append("! Welcome to ")
+                        .append(" amet, ")
                         .append(generateRandomString(random))
-                        .append(".").toString();
+                        .append(" elit.").toString();
             }
             endTime = System.nanoTime();
             results.put("durationStringBuilder", (endTime - startTime) / ITERATIONS);
@@ -80,7 +80,7 @@ class StringTemplateTest {
             System.gc();
             startTime = System.nanoTime();
             for (int i = 0; i < ITERATIONS; i++) {
-                String result = String.format("Hello, %s! Welcome to %s.", generateRandomString(random), generateRandomString(random));
+                String result = String.format("Lorem ipsum %s amet, %s elit.", generateRandomString(random), generateRandomString(random));
             }
             endTime = System.nanoTime();
             results.put("durationStringFormat", (endTime - startTime) / ITERATIONS);
@@ -91,7 +91,7 @@ class StringTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()),durationStringTemplate);
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
         }
 
         private static String generateRandomString(Random random) {
