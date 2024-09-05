@@ -21,7 +21,7 @@ StringTemplate 클래스를 사용하여 StringBuilder 및 String.format과 비�
 | 7개      | 930 ms  | 767 ms  |  1297 ms |
 | 9개      |  1271 ms | 1054 ms  |  1535 ms |
 
-* 성능 측정은 1,000,000 번 반복하여 측정하였습니다.
+* 성능 측정은 1,000,000 번 반복하여 측정하였습니다. (버전 0.0.1 기준)
 * StringTemplate 클래스가 StringBuilder보다는 느리지만, String.format보다는 빠릅니다.
 
 ### 사용법
