@@ -1,0 +1,45 @@
+name: Maven Package On PR Merge
+
+on:
+  pull_request:
+    branches:
+      - master
+    types:
+      - closed
+
+jobs:
+  publish:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'rc/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract version from branch name
+        id: extract_version
+        run: |
+          BRANCH_NAME=${{ github.event.pull_request.head.ref }}
+          VERSION=$(echo $BRANCH_NAME | sed 's/^rc\///')
+          echo "Extracted version: $VERSION"
+          echo "::set-output name=version::$VERSION"
+
+      - name: Create and push tag
+        run: |
+          VERSION=${{ steps.extract_version.outputs.version }}
+          git tag $VERSION
+          git push origin $VERSION
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          server-id: github # Value of the distributionManagement/repository/id field of the pom.xml
+          settings-path: ${{ github.workspace }} # location for the settings.xml file
+
+      - name: Publish to maven
+        run: ./gradlew publish
