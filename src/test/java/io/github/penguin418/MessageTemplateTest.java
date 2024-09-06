@@ -1,24 +1,21 @@
-package com.github.penguin418;
+package io.github.penguin418;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
-import java.util.stream.Stream;
-
 import static org.junit.jupiter.api.Assertions.*;
 
-class StringTemplateTest {
+class MessageTemplateTest {
 
     @Nested
     public class FunctionalTest{
         @Test
         @DisplayName("다른 값으로 매핑하더라도, 원본 템플릿은 변하면 안된다")
         void processTest() {
-            StringTemplate st = new StringTemplate.Builder()
+            MessageTemplate st = new MessageTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", "sit")
                     .append(" amet, ")
@@ -44,18 +41,18 @@ class StringTemplateTest {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
 
-            // StringTemplate
-            StringTemplate stringTemplate = new StringTemplate.Builder()
+            // MessageTemplate
+            MessageTemplate messageTemplate = new MessageTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", generateRandomString(random))
                     .append(" amet, ")
                     .reserve("consectetur", generateRandomString(random))
                     .append(" elit.")
                     .build();
-            long durationStringTemplate = measureTime(()->{
-                String result = stringTemplate.process(Map.of("dolor", generateRandomString(random), "consectetur", generateRandomString(random)));
+            long durationMessageTemplate = measureTime(()->{
+                String result = messageTemplate.process(Map.of("dolor", generateRandomString(random), "consectetur", generateRandomString(random)));
             });
-            results.put("durationStringTemplate", durationStringTemplate);
+            results.put("durationMessageTemplate", durationMessageTemplate);
 
             // StringBuilder
             long durationStringBuilder = measureTime(()->{
@@ -79,7 +76,7 @@ class StringTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
         }
         @Test
         @DisplayName("중간 템플릿 처리 시 최소한 가장 느리지는 않을 것")
@@ -87,8 +84,8 @@ class StringTemplateTest {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
 
-            // StringTemplate
-            StringTemplate stringTemplate = new StringTemplate.Builder()
+            // MessageTemplate
+            MessageTemplate messageTemplate = new MessageTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", generateRandomString(random))
                     .append(" amet, ")
@@ -99,15 +96,15 @@ class StringTemplateTest {
                     .reserve("eiusmod", generateRandomString(random))
                     .append(" tempor.")
                     .build();
-            long durationStringTemplate = measureTime(() -> {
-                String result = stringTemplate.process(Map.of(
+            long durationMessageTemplate = measureTime(() -> {
+                String result = messageTemplate.process(Map.of(
                         "dolor", generateRandomString(random),
                         "consectetur", generateRandomString(random),
                         "sed", generateRandomString(random),
                         "eiusmod", generateRandomString(random)
                 ));
             });
-            results.put("durationStringTemplate", durationStringTemplate);
+            results.put("durationMessageTemplate", durationMessageTemplate);
 
             // StringBuilder
             long durationStringBuilder = measureTime(() -> {
@@ -135,7 +132,7 @@ class StringTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
         }
 
         @Test
@@ -144,8 +141,8 @@ class StringTemplateTest {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
 
-            // StringTemplate
-            StringTemplate stringTemplate = new StringTemplate.Builder()
+            // MessageTemplate
+            MessageTemplate messageTemplate = new MessageTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", generateRandomString(random))
                     .append(" amet, ")
@@ -162,8 +159,8 @@ class StringTemplateTest {
                     .reserve("dolore", generateRandomString(random))
                     .append(" magna aliqua.")
                     .build();
-            long durationStringTemplate = measureTime(() -> {
-                String result = stringTemplate.process(Map.of(
+            long durationMessageTemplate = measureTime(() -> {
+                String result = messageTemplate.process(Map.of(
                         "dolor", generateRandomString(random),
                         "consectetur", generateRandomString(random),
                         "sed", generateRandomString(random),
@@ -173,7 +170,7 @@ class StringTemplateTest {
                         "dolore", generateRandomString(random)
                 ));
             });
-            results.put("durationStringTemplate", durationStringTemplate);
+            results.put("durationMessageTemplate", durationMessageTemplate);
 
             // StringBuilder
             long durationStringBuilder = measureTime(() -> {
@@ -208,7 +205,7 @@ class StringTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
         }
 
         @Test
@@ -217,8 +214,8 @@ class StringTemplateTest {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
 
-            // StringTemplate
-            StringTemplate stringTemplate = new StringTemplate.Builder()
+            // MessageTemplate
+            MessageTemplate messageTemplate = new MessageTemplate.Builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", generateRandomString(random))
                     .append(" amet, ")
@@ -239,8 +236,8 @@ class StringTemplateTest {
                     .reserve("dolore2", generateRandomString(random))
                     .append(" magna aliqua.")
                     .build();
-            long durationStringTemplate = measureTime(() -> {
-                String result = stringTemplate.process(Map.of(
+            long durationMessageTemplate = measureTime(() -> {
+                String result = messageTemplate.process(Map.of(
                         "dolor", generateRandomString(random),
                         "consectetur", generateRandomString(random),
                         "sed", generateRandomString(random),
@@ -252,7 +249,7 @@ class StringTemplateTest {
                         "dolore2", generateRandomString(random)
                 ));
             });
-            results.put("durationStringTemplate", durationStringTemplate);
+            results.put("durationMessageTemplate", durationMessageTemplate);
 
             // StringBuilder
             long durationStringBuilder = measureTime(() -> {
@@ -291,7 +288,7 @@ class StringTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationStringTemplate);
+            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
         }
 
 
