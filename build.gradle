@@ -1,9 +1,22 @@
+import com.vanniktech.maven.publish.SonatypeHost
+
 plugins {
     id 'java'
+    // using an official library as maven-publish doesn't support Central Publishing Portal
+    //  - notice: https://central.sonatype.org/publish/publish-portal-gradle/#question
+    id "com.vanniktech.maven.publish" version "0.29.0"
+    id 'signing'
 }
 
 group = 'io.github.penguin418'
 version = '1.0-SNAPSHOT'
+
+ext {
+    artifactId = "message-template"
+    artifactGroup = group
+    artifactVersion = version
+    isReleaseVersion = !version.endsWith("SNAPSHOT")
+}
 
 repositories {
     mavenCentral()
@@ -16,4 +29,48 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+javadoc {
+    if (JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}
+
+mavenPublishing {
+    publishToMavenCentral(SonatypeHost.CENTRAL_PORTAL)
+    signAllPublications()
+
+    coordinates("${artifactGroup}", "${artifactId}", "${artifactVersion}")
+    pom {
+        name = "Message Template"
+        description = "Efficient readable template for frequently reused format"
+        url = "https://github.com/penguin418/JavaMessageTemplate/"
+        licenses {
+            license {
+                name = 'MIT license'
+                url = 'https://opensource.org/license/mit'
+            }
+        }
+        developers {
+            developer {
+                id = "penguin418"
+                name = "Seokjin Bae"
+                url = "https://github.com/penguin418/JavaMessageTemplate/graphs/contributors"
+            }
+        }
+        scm {
+            url = "https://github.com/penguin418/JavaMessageTemplate/"
+            connection = "scm:git:git://github.com/penguin418/JavaMessageTemplate.git"
+            developerConnection = "scm:git:ssh://git@github.com/penguin418/JavaMessageTemplate.git"
+        }
+    }
 }
