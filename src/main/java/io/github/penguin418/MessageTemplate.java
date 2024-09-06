@@ -2,11 +2,11 @@ package io.github.penguin418;
 
 import java.util.*;
 
-public class StringTemplate {
+public class MessageTemplate {
     private final String[] templateArray;
     private final Map<String, int[]> reservedPositions;
 
-    private StringTemplate(String[] templateArray, Map<String, int[]> reservedPositions) {
+    private MessageTemplate(String[] templateArray, Map<String, int[]> reservedPositions) {
         this.templateArray = templateArray;
         this.reservedPositions = reservedPositions;
     }
@@ -44,7 +44,7 @@ public class StringTemplate {
             return this;
         }
 
-        public StringTemplate build() {
+        public MessageTemplate build() {
             Map<String, int[]> reservedPositions = new HashMap<>();
             for (Map.Entry<String, List<Integer>> entry : reservedKeywords.entrySet()) {
                 int[] positions = new int[entry.getValue().size()];
@@ -54,7 +54,7 @@ public class StringTemplate {
                 reservedPositions.put(entry.getKey(), positions);
             }
 
-            return new StringTemplate(templateList.toArray(new String[0]), reservedPositions);
+            return new MessageTemplate(templateList.toArray(new String[0]), reservedPositions);
         }
     }
 }
