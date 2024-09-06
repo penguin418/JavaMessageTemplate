@@ -9,7 +9,7 @@ plugins {
 }
 
 group = 'io.github.penguin418'
-version = '1.0-SNAPSHOT'
+version = '0.0.1'
 
 ext {
     artifactId = "message-template"
