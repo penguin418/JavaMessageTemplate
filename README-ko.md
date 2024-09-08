@@ -24,6 +24,22 @@ MessageTemplate 클래스를 사용하여 StringBuilder 및 String.format과 비
 * 성능 측정은 1,000,000 번 반복하여 측정하였습니다. (버전 0.0.1 기준)
 * MessageTemplate 클래스가 StringBuilder보다는 느리지만, String.format보다는 빠릅니다.
 
+### 설치
+
+메이븐이나 그레이들을 사용하여 의존성을 추가할 수 있습니다.
+```gradle
+implementation 'io.github.penguin418:message-template:0.0.1'
+```
+```xml
+<dependency>
+    <groupId>io.github.penguin418</groupId>
+    <artifactId>message-template</artifactId>
+    <version>0.0.1</version>
+</dependency>
+```
+* 자바 17 이상이 필요합니다.
+* 최신 버전은 깃허브 마지막 태그를 참조해주세요
+
 ### 사용법
 
 1. 템플릿 생성: 문자열 템플릿을 생성하려면 Builder 클래스를 사용합니다.

@@ -26,6 +26,22 @@ follows:
 * Performance was measured by repeating the operation 1,000,000 times (version 0.0.1).
 * The `MessageTemplate` class is slower than `StringBuilder`, but faster than `String.format`.
 
+### Installation
+
+You can include the `message-template` library in your project using Maven or Gradle.
+```gradle
+implementation 'io.github.penguin418:message-template:0.0.1'
+```
+```xml
+<dependency>
+    <groupId>io.github.penguin418</groupId>
+    <artifactId>message-template</artifactId>
+    <version>0.0.1</version>
+</dependency>
+```
+* Java version: This library requires Java 17 or higher. 
+* Please refer to the latest tag on GitHub for the most recent version.
+
 ### Usage
 
 1. Creating a template: Use the `Builder` class to create a string template.
