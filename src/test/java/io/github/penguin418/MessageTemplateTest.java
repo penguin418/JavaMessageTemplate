@@ -11,7 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class MessageTemplateTest {
 
     @Nested
-    public class FunctionalTest{
+    public class FunctionalTest {
         @Test
         @DisplayName("다른 값으로 매핑하더라도, 원본 템플릿은 변하면 안된다")
         void processTest() {
@@ -25,6 +25,66 @@ class MessageTemplateTest {
             assertEquals("Lorem ipsum sit amet, adipiscing elit.", st.process(Map.of()));
             assertEquals("Lorem ipsum dolor amet, elit elit.", st.process(Map.of("dolor", "dolor", "consectetur", "elit")));
             assertEquals("Lorem ipsum sit amet, adipiscing elit.", st.process(Map.of()));
+        }
+
+
+        @Test
+        @DisplayName("Empty template should return an empty string")
+        void staticConstructorOfTest0() {
+            MessageTemplate template = MessageTemplate.of("");
+            assertEquals("", template.process(Map.of()));
+        }
+
+
+        @Test
+        @DisplayName("Template with two keywords should reflect their respective values")
+        void staticConstructorOfTest1() {
+            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum} sit ${amet}, adipiscing elit.");
+            assertEquals("Lorem IPSUM sit AMET, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM", "amet", "AMET")));
+        }
+
+        @Test
+        @DisplayName("Unmatched curly braces should be ignored")
+        void staticConstructorOfTest2() {
+            MessageTemplate template = MessageTemplate.of("Lorem {${ipsum} sit ${amet}}, adipiscing elit.");
+            assertEquals("Lorem {IPSUM sit AMET}, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM", "amet", "AMET")));
+        }
+
+        @Test
+        @DisplayName("Nested curly brace should be captured as reserved keyword")
+        void staticConstructorOfTest3() {
+            MessageTemplate template = MessageTemplate.of("Lorem {${ipsum}} sit ${ipsum}, adipiscing elit.");
+            assertEquals("Lorem {IPSUM} sit IPSUM, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM")));
+        }
+
+
+        @Test
+        @DisplayName("Curly braces should capture all character before closing")
+        void staticConstructorOfTest4() {
+            MessageTemplate template = MessageTemplate.of("Lorem ${{ipsum} sit ${amet}, adipiscing elit.");
+            assertEquals("Lorem IPSUM sit null, adipiscing elit.", template.process(Map.of("{ipsum", "IPSUM")));
+        }
+
+        @Test
+        @DisplayName("Escaped special character should be ignored")
+        void staticConstructorOfTestEscapeSpecialCharacters() {
+            MessageTemplate template = MessageTemplate.of("Lorem \\${ipsum} sit $\\${amet}, adipiscing $${elit}.");
+            assertEquals("Lorem \\${ipsum} sit $\\${amet}, adipiscing $100.", template.process(Map.of("elit", "100")));
+        }
+
+        @Test
+        @DisplayName("Default value should be used")
+        void staticConstructorOfTestDefaultValue() {
+            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum:DEFAULT1} sit ${amet:DEFAULT2}, adipiscing elit.");
+            assertEquals("Lorem DEFAULT1 sit DEFAULT2, adipiscing elit.", template.process(Map.of()));
+        }
+
+        @Test
+        @DisplayName("Duplicated keyword should hold respective default value")
+        void staticConstructorOfTestDuplicateKeyword() {
+            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum:DEFAULT1} sit ${ipsum:DEFAULT2}, adipiscing elit.");
+            assertEquals("Lorem DEFAULT1 sit DEFAULT2, adipiscing elit.", template.process(Map.of()));
+            assertEquals("Lorem IPSUM sit IPSUM, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM")));
         }
     }
 
@@ -49,13 +109,13 @@ class MessageTemplateTest {
                     .reserve("consectetur", generateRandomString(random))
                     .append(" elit.")
                     .build();
-            long durationMessageTemplate = measureTime(()->{
+            long durationMessageTemplate = measureTime(() -> {
                 String result = messageTemplate.process(Map.of("dolor", generateRandomString(random), "consectetur", generateRandomString(random)));
             });
             results.put("durationMessageTemplate", durationMessageTemplate);
 
             // StringBuilder
-            long durationStringBuilder = measureTime(()->{
+            long durationStringBuilder = measureTime(() -> {
                 String result = new StringBuilder().append("Lorem ipsum ")
                         .append(generateRandomString(random))
                         .append(" amet, ")
@@ -65,7 +125,7 @@ class MessageTemplateTest {
             results.put("durationStringBuilder", durationStringBuilder);
 
             // StringFormat
-            long durationStringFormat = measureTime(()->{
+            long durationStringFormat = measureTime(() -> {
                 String result = String.format("Lorem ipsum %s amet, %s elit.", generateRandomString(random), generateRandomString(random));
             });
             results.put("durationStringFormat", durationStringFormat);
@@ -78,6 +138,7 @@ class MessageTemplateTest {
 
             assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
         }
+
         @Test
         @DisplayName("중간 템플릿 처리 시 최소한 가장 느리지는 않을 것")
         public void midTemplateComparison() {
@@ -279,7 +340,7 @@ class MessageTemplateTest {
             long durationStringFormat = measureTime(() -> {
                 String result = String.format("Lorem ipsum %s amet, %s elit, %s do %s tempor %s ut %s et %s et %s et %s magna aliqua.",
                         generateRandomString(random), generateRandomString(random), generateRandomString(random),
-                        generateRandomString(random), generateRandomString(random), generateRandomString(random), generateRandomString(random),generateRandomString(random),generateRandomString(random));
+                        generateRandomString(random), generateRandomString(random), generateRandomString(random), generateRandomString(random), generateRandomString(random), generateRandomString(random));
             });
             results.put("durationStringFormat", durationStringFormat);
 
@@ -303,7 +364,7 @@ class MessageTemplateTest {
 
         private static long measureTime(Runnable task) {
             // JIT 오버헤드 제거
-            for(int i=0;i<WARM_UP_ITERATIONS;i++){
+            for (int i = 0; i < WARM_UP_ITERATIONS; i++) {
                 task.run();
             }
             // GC 영향 제거
