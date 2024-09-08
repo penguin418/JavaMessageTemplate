@@ -41,8 +41,14 @@ MessageTemplate 클래스를 사용하여 StringBuilder 및 String.format과 비
 2. 템플릿 값 설정: 예약어를 채울 수 있습니다.
 
     ```java
-    String result = template.process(replacements, Map.of("name", "John"));
+    String result = template.process(Map.of("name", "John"));
     System.out.println(result); // 출력: Hello, John! Welcome to {place}.
     ```
     * 채우지 않은 예약어는 기본값으로 남습니다.
 
+3. 정적 생성자 `of`도 사용할 수 있습니다.
+   ```java
+   MessageTemplate template = MessageTemplate.of("Lorem ${ipsum} sit ${amet}, adipiscing elit.");
+   String result = template.process(Map.of("ipsum", "IPSUM", "amet", "AMET"));
+   System.out.println(result); // 출력: Lorem IPSUM sit AMET, adipiscing elit.
+   ```
