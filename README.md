@@ -1,32 +1,34 @@
 # MessageTemplate
 
-예약어를 추가하고, 나중에 실제 값으로 대체할 수 있는 템플릿.
+A template where placeholders can be added and later replaced with actual values.
 
-미리 값으로 대치할 위치를 문자열 키로 예약할 수 있습니다.
+You can reserve positions in the template with string keys where the values will be replaced later.
 
-String.format 또는 StringBuilder과 비교해서 너무 느리지는 않은 수준이므로, 성능이 필요한 곳 보다는, 
+In comparison to `String.format` or `StringBuilder`, the performance is not significantly slower, so it is more suitable
+for scenarios where performance is not the primary concern, such as email templates, where readability and separation
+from core logic are more important.
 
-이메일 템플릿처럼, 주요 로직과 분리되어 실행되는 코드 중에, 가독성이 필요한 경우 사용하면 좋을 것 같습니다.
+Unlike `StringBuilder`, where you add values while building the template, `MessageTemplate` allows you to define
+placeholders in advance, which can be filled later.
 
-StringBuilder는 builder를 작성 시에 실제 값을 추가해야 하지만, MessageTemplate는 미리 정의된 위치에 값을 추가할 수 있게 해줍니다.
+### Performance Comparison
 
-### 성능 비교
+The performance measurements for the `MessageTemplate` class compared to `StringBuilder` and `String.format` are as
+follows:
 
-MessageTemplate 클래스를 사용하여 StringBuilder 및 String.format과 비교한 성능 측정치는 다음과 같습니다
+| Number of Parameters | MessageTemplate | StringBuilder | String.format |
+|----------------------|-----------------|---------------|---------------|
+| 2                    | 330 ms          | 216 ms        | 390 ms        |
+| 4                    | 570 ms          | 444 ms        | 708 ms        |
+| 7                    | 930 ms          | 767 ms        | 1297 ms       |
+| 9                    | 1271 ms         | 1054 ms       | 1535 ms       |
 
-| 파라미터 개수 | MessageTemplate  | StringBuilder  |  String.format |
-|---------|---|---|---|
-| 2개      | 330 ms  | 216 ms  |  390 ms |
-| 4개      | 570 ms  | 444 ms  |  708 ms |
-| 7개      | 930 ms  | 767 ms  |  1297 ms |
-| 9개      |  1271 ms | 1054 ms  |  1535 ms |
+* Performance was measured by repeating the operation 1,000,000 times (version 0.0.1).
+* The `MessageTemplate` class is slower than `StringBuilder`, but faster than `String.format`.
 
-* 성능 측정은 1,000,000 번 반복하여 측정하였습니다. (버전 0.0.1 기준)
-* MessageTemplate 클래스가 StringBuilder보다는 느리지만, String.format보다는 빠릅니다.
+### Usage
 
-### 사용법
-
-1. 템플릿 생성: 문자열 템플릿을 생성하려면 Builder 클래스를 사용합니다. 
+1. Creating a template: Use the `Builder` class to create a string template.
 
     ```java
     MessageTemplate template = new MessageTemplate.Builder()
@@ -38,11 +40,10 @@ MessageTemplate 클래스를 사용하여 StringBuilder 및 String.format과 비
         .build();
     ```
 
-2. 템플릿 값 설정: 예약어를 채울 수 있습니다.
+2. Setting template values: You can fill in the placeholders.
 
     ```java
     String result = template.process(replacements, Map.of("name", "John"));
-    System.out.println(result); // 출력: Hello, John! Welcome to {place}.
+    System.out.println(result); // Output: Hello, John! Welcome to {place}.
     ```
-   * 채우지 않은 예약어는 기본값으로 남습니다.
-
+    * Unfilled placeholders will remain with their default values.
