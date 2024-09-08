@@ -1,10 +1,14 @@
 package io.github.penguin418;
 
 import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class MessageTemplate {
     private final String[] templateArray;
     private final Map<String, int[]> reservedPositions;
+
 
     private MessageTemplate(String[] templateArray, Map<String, int[]> reservedPositions) {
         this.templateArray = templateArray;
@@ -19,6 +23,49 @@ public class MessageTemplate {
                 resultArray[position] = value;
         });
         return String.join("", resultArray);
+    }
+
+    public static MessageTemplate of(String template) {
+        return of(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
+    }
+
+
+    public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
+
+    private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
+        return (s) -> {
+            if (s.contains(":")) {
+                final String[] parted = s.split(":");
+                String keyword = parted[0].substring(2, parted[0].length());
+                String defaultValue = parted[1].substring(0, parted[1].length() - 1);
+                return new ReservedPosition(keyword, defaultValue);
+            }
+            return new ReservedPosition(s.substring(2, s.length() - 1), null);
+        };
+    }
+
+    private static MessageTemplate of(String template, Pattern reservedPattern, Function<String, ReservedPosition> reservedPosition) {
+        Matcher matcher = reservedPattern.matcher(template);
+        Builder builder = new Builder();
+        int lastIndex = 0;
+        while (matcher.find()) {
+            builder.append(template.substring(lastIndex, matcher.start()));
+            ReservedPosition reserved = reservedPosition.apply(template.substring(matcher.start(), matcher.end()));
+            builder.reserve(reserved.keyword, reserved.defaultValue);
+            lastIndex = matcher.end();
+        }
+        builder.append(template.substring(lastIndex));
+        return builder.build();
+    }
+
+    public static class ReservedPosition {
+        String keyword;
+        String defaultValue;
+
+        public ReservedPosition(String keyword, String defaultValue) {
+            this.keyword = keyword;
+            this.defaultValue = defaultValue;
+        }
     }
 
     public static class Builder {
