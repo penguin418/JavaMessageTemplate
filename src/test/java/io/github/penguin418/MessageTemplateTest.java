@@ -96,7 +96,7 @@ class MessageTemplateTest {
         private static final int STRING_LENGTH = 10; // 랜덤 문자열 길이
 
         @Test
-        @DisplayName("짧은 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Short template processing should not take the longest time")
         public void shortTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -136,11 +136,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("중간 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Mid template processing should not take the longest time")
         public void midTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -193,11 +194,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("긴 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Long template processing should not take the longest time")
         public void longTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -266,11 +268,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("더 긴 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Even longer template processing should not take the longest time")
         public void longerTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -349,7 +352,8 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
 
