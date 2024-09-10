@@ -25,37 +25,8 @@ public class MessageTemplate {
         return String.join("", resultArray);
     }
 
-    public static MessageTemplate of(String template) {
-        return of(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
-    }
-
-
-    public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
-
-    private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
-        return (s) -> {
-            if (s.contains(":")) {
-                final String[] parted = s.split(":");
-                String keyword = parted[0].substring(2, parted[0].length());
-                String defaultValue = parted[1].substring(0, parted[1].length() - 1);
-                return new ReservedPosition(keyword, defaultValue);
-            }
-            return new ReservedPosition(s.substring(2, s.length() - 1), null);
-        };
-    }
-
-    private static MessageTemplate of(String template, Pattern reservedPattern, Function<String, ReservedPosition> reservedPosition) {
-        Matcher matcher = reservedPattern.matcher(template);
-        Builder builder = new Builder();
-        int lastIndex = 0;
-        while (matcher.find()) {
-            builder.append(template.substring(lastIndex, matcher.start()));
-            ReservedPosition reserved = reservedPosition.apply(template.substring(matcher.start(), matcher.end()));
-            builder.reserve(reserved.keyword, reserved.defaultValue);
-            lastIndex = matcher.end();
-        }
-        builder.append(template.substring(lastIndex));
-        return builder.build();
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class ReservedPosition {
@@ -69,6 +40,20 @@ public class MessageTemplate {
     }
 
     public static class Builder {
+        public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
+
+        private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
+            return (s) -> {
+                if (s.contains(":")) {
+                    final String[] parted = s.split(":");
+                    String keyword = parted[0].substring(2, parted[0].length());
+                    String defaultValue = parted[1].substring(0, parted[1].length() - 1);
+                    return new ReservedPosition(keyword, defaultValue);
+                }
+                return new ReservedPosition(s.substring(2, s.length() - 1), null);
+            };
+        }
+
         private final List<String> templateList = new ArrayList<>();
         private final Map<String, List<Integer>> reservedKeywords = new HashMap<>();
         private String lastAppended = null;
@@ -88,6 +73,24 @@ public class MessageTemplate {
             lastAppended = null;
             templateList.add(defaultValue);
             reservedKeywords.computeIfAbsent(keyword, (v) -> new ArrayList<>()).add(templateList.size() - 1);
+            return this;
+        }
+
+
+        public Builder format(String template) {
+            return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
+        }
+
+        private Builder format(String template, Pattern reservedPattern, Function<String, ReservedPosition> reservedPosition) {
+            Matcher matcher = reservedPattern.matcher(template);
+            int lastIndex = 0;
+            while (matcher.find()) {
+                append(template.substring(lastIndex, matcher.start()));
+                ReservedPosition reserved = reservedPosition.apply(template.substring(matcher.start(), matcher.end()));
+                reserve(reserved.keyword, reserved.defaultValue);
+                lastIndex = matcher.end();
+            }
+            append(template.substring(lastIndex));
             return this;
         }
 
