@@ -15,7 +15,7 @@ class MessageTemplateTest {
         @Test
         @DisplayName("다른 값으로 매핑하더라도, 원본 템플릿은 변하면 안된다")
         void processTest() {
-            MessageTemplate st = new MessageTemplate.Builder()
+            MessageTemplate st = MessageTemplate.builder()
                     .append("Lorem ipsum ")
                     .reserve("dolor", "sit")
                     .append(" amet, ")
@@ -31,7 +31,7 @@ class MessageTemplateTest {
         @Test
         @DisplayName("Empty template should return an empty string")
         void staticConstructorOfTest0() {
-            MessageTemplate template = MessageTemplate.of("");
+            MessageTemplate template = MessageTemplate.builder().format("").build();
             assertEquals("", template.process(Map.of()));
         }
 
@@ -39,21 +39,21 @@ class MessageTemplateTest {
         @Test
         @DisplayName("Template with two keywords should reflect their respective values")
         void staticConstructorOfTest1() {
-            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum} sit ${amet}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem ${ipsum} sit ${amet}, adipiscing elit.").build();
             assertEquals("Lorem IPSUM sit AMET, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM", "amet", "AMET")));
         }
 
         @Test
         @DisplayName("Unmatched curly braces should be ignored")
         void staticConstructorOfTest2() {
-            MessageTemplate template = MessageTemplate.of("Lorem {${ipsum} sit ${amet}}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem {${ipsum} sit ${amet}}, adipiscing elit.").build();
             assertEquals("Lorem {IPSUM sit AMET}, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM", "amet", "AMET")));
         }
 
         @Test
         @DisplayName("Nested curly brace should be captured as reserved keyword")
         void staticConstructorOfTest3() {
-            MessageTemplate template = MessageTemplate.of("Lorem {${ipsum}} sit ${ipsum}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem {${ipsum}} sit ${ipsum}, adipiscing elit.").build();
             assertEquals("Lorem {IPSUM} sit IPSUM, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM")));
         }
 
@@ -61,28 +61,28 @@ class MessageTemplateTest {
         @Test
         @DisplayName("Curly braces should capture all character before closing")
         void staticConstructorOfTest4() {
-            MessageTemplate template = MessageTemplate.of("Lorem ${{ipsum} sit ${amet}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem ${{ipsum} sit ${amet}, adipiscing elit.").build();
             assertEquals("Lorem IPSUM sit null, adipiscing elit.", template.process(Map.of("{ipsum", "IPSUM")));
         }
 
         @Test
         @DisplayName("Escaped special character should be ignored")
         void staticConstructorOfTestEscapeSpecialCharacters() {
-            MessageTemplate template = MessageTemplate.of("Lorem \\${ipsum} sit $\\${amet}, adipiscing $${elit}.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem \\${ipsum} sit $\\${amet}, adipiscing $${elit}.").build();
             assertEquals("Lorem \\${ipsum} sit $\\${amet}, adipiscing $100.", template.process(Map.of("elit", "100")));
         }
 
         @Test
         @DisplayName("Default value should be used")
         void staticConstructorOfTestDefaultValue() {
-            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum:DEFAULT1} sit ${amet:DEFAULT2}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem ${ipsum:DEFAULT1} sit ${amet:DEFAULT2}, adipiscing elit.").build();
             assertEquals("Lorem DEFAULT1 sit DEFAULT2, adipiscing elit.", template.process(Map.of()));
         }
 
         @Test
         @DisplayName("Duplicated keyword should hold respective default value")
         void staticConstructorOfTestDuplicateKeyword() {
-            MessageTemplate template = MessageTemplate.of("Lorem ${ipsum:DEFAULT1} sit ${ipsum:DEFAULT2}, adipiscing elit.");
+            MessageTemplate template = MessageTemplate.builder().format("Lorem ${ipsum:DEFAULT1} sit ${ipsum:DEFAULT2}, adipiscing elit.").build();
             assertEquals("Lorem DEFAULT1 sit DEFAULT2, adipiscing elit.", template.process(Map.of()));
             assertEquals("Lorem IPSUM sit IPSUM, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM")));
         }
@@ -96,7 +96,7 @@ class MessageTemplateTest {
         private static final int STRING_LENGTH = 10; // 랜덤 문자열 길이
 
         @Test
-        @DisplayName("짧은 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Short template processing should not take the longest time")
         public void shortTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -136,11 +136,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("중간 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Mid template processing should not take the longest time")
         public void midTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -193,11 +194,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("긴 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Long template processing should not take the longest time")
         public void longTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -266,11 +268,12 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
         @Test
-        @DisplayName("더 긴 템플릿 처리 시 최소한 가장 느리지는 않을 것")
+        @DisplayName("Even longer template processing should not take the longest time")
         public void longerTemplateComparison() {
             Map<String, Long> results = new HashMap<>();
             Random random = new Random();
@@ -349,7 +352,8 @@ class MessageTemplateTest {
                 System.out.println(key + ": " + value + " ms");
             });
 
-            assertNotEquals(results.entrySet().stream().max(Map.Entry.comparingByValue()), durationMessageTemplate);
+            long maxDuration = results.entrySet().stream().max(Map.Entry.comparingByValue()).map(Map.Entry::getValue).get();
+            assertTrue(maxDuration >durationMessageTemplate);
         }
 
 
