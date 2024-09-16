@@ -27,6 +27,18 @@ class MessageTemplateTest {
             assertEquals("Lorem ipsum sit amet, adipiscing elit.", st.process(Map.of()));
         }
 
+        @Test
+        void getTemplateStringTest() {
+            MessageTemplate st = MessageTemplate.builder()
+                    .append("Lorem ipsum ")
+                    .reserve("dolor", "sit")
+                    .append(" amet, ")
+                    .reserve("consectetur", "adipiscing")
+                    .append(" elit.")
+                    .build();
+            assertEquals("Lorem ipsum ${dolor:sit} amet, ${consectetur:adipiscing} elit.", st.getTemplate());
+        }
+
 
         @Test
         @DisplayName("Empty template should return an empty string")

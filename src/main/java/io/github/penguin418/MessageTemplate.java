@@ -25,6 +25,32 @@ public class MessageTemplate {
         return String.join("", resultArray);
     }
 
+    public String getTemplate() {
+        StringBuilder templateStringBuilder = new StringBuilder();
+        Map<Integer, String> indexKeywordMap = new HashMap<>();
+        for (Map.Entry<String, int[]> entry : reservedPositions.entrySet()) {
+            String keyword = entry.getKey();
+            for (int position : entry.getValue()) {
+                indexKeywordMap.put(position, keyword);
+            }
+        }
+        for (int i = 0; i < templateArray.length; i++) {
+            if (indexKeywordMap.containsKey(i)){
+                String keyword = indexKeywordMap.get(i);
+                String defaultValue = templateArray[i];
+                if (defaultValue == null) {
+                    templateStringBuilder.append("${").append(keyword).append("}");
+                } else {
+                    templateStringBuilder.append("${").append(keyword).append(":").append(defaultValue).append("}");
+                }
+            } else {
+                templateStringBuilder.append(templateArray[i]);
+            }
+        }
+        return templateStringBuilder.toString();
+    }
+
+
     public static Builder builder() {
         return new Builder();
     }
