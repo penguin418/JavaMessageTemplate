@@ -29,16 +29,6 @@ public class MessageTemplate {
         return new Builder();
     }
 
-    public static class ReservedPosition {
-        String keyword;
-        String defaultValue;
-
-        public ReservedPosition(String keyword, String defaultValue) {
-            this.keyword = keyword;
-            this.defaultValue = defaultValue;
-        }
-    }
-
     public static class Builder {
         public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
 
@@ -105,6 +95,16 @@ public class MessageTemplate {
             }
 
             return new MessageTemplate(templateList.toArray(new String[0]), reservedPositions);
+        }
+
+        private static class ReservedPosition {
+            String keyword;
+            String defaultValue;
+
+            public ReservedPosition(String keyword, String defaultValue) {
+                this.keyword = keyword;
+                this.defaultValue = defaultValue;
+            }
         }
     }
 }
