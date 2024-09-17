@@ -131,7 +131,7 @@ public class MessageTemplate {
             String keyword;
             String defaultValue;
 
-            public ReservedPosition(String keyword, String defaultValue) {
+            private ReservedPosition(String keyword, String defaultValue) {
                 this.keyword = keyword;
                 this.defaultValue = defaultValue;
             }
