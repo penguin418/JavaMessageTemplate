@@ -76,7 +76,7 @@ public class MessageTemplate {
             return this;
         }
 
-
+        @Deprecated
         public Builder format(String template) {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
         }
