@@ -5,6 +5,10 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Templated Messages with placeholders.
+ * Placeholders can be replaced with actual values at runtime.
+ */
 public class MessageTemplate {
     private final String[] templateArray;
     private final Map<String, int[]> reservedPositions;
@@ -15,6 +19,12 @@ public class MessageTemplate {
         this.reservedPositions = reservedPositions;
     }
 
+    /**
+     * Processes the template by replacing placeholders with the provided values.
+     *
+     * @param replacements A map containing placeholder keywords and their corresponding replacement values.
+     * @return The processed template as a String with placeholders replaced.
+     */
     public String process(Map<String, String> replacements) {
         String[] resultArray = new String[templateArray.length];
         System.arraycopy(templateArray, 0, resultArray, 0, templateArray.length);
@@ -25,6 +35,11 @@ public class MessageTemplate {
         return String.join("", resultArray);
     }
 
+    /**
+     * Retrieves the original template with placeholders.
+     *
+     * @return The template as a String with placeholders in the format ${keyword} or ${keyword:defaultValue}.
+     */
     public String getTemplate() {
         StringBuilder templateStringBuilder = new StringBuilder();
         Map<Integer, String> indexKeywordMap = new HashMap<>();
@@ -50,12 +65,22 @@ public class MessageTemplate {
         return templateStringBuilder.toString();
     }
 
-
+    /**
+     * Creates a new Builder instance for constructing a MessageTemplate.
+     *
+     * @return A new Builder instance.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Builder class for constructing a MessageTemplate instance.
+     */
     public static class Builder {
+        /**
+         * Pattern to identify placeholders in the template in the format ${keyword} or ${keyword:defaultValue}.
+         */
         public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
 
         private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
@@ -74,6 +99,12 @@ public class MessageTemplate {
         private final Map<String, List<Integer>> reservedKeywords = new HashMap<>();
         private String lastAppended = null;
 
+        /**
+         * Appends a string to the template.
+         *
+         * @param str The string to append.
+         * @return The Builder instance for method chaining.
+         */
         public Builder append(String str) {
             if (lastAppended != null) {
                 lastAppended = lastAppended + str;
@@ -85,6 +116,13 @@ public class MessageTemplate {
             return this;
         }
 
+        /**
+         * Reserves a placeholder in the template with a keyword and default value.
+         *
+         * @param keyword      The placeholder keyword.
+         * @param defaultValue The default value for the placeholder.
+         * @return The Builder instance for method chaining.
+         */
         public Builder reserve(String keyword, String defaultValue) {
             lastAppended = null;
             templateList.add(defaultValue);
@@ -92,10 +130,23 @@ public class MessageTemplate {
             return this;
         }
 
+        /**
+         * Appends a template string containing placeholders to the builder.
+         *
+         * @param template The template string to append.
+         * @return The Builder instance for method chaining.
+         */
         public Builder appendTemplate(String template) {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
         }
 
+        /**
+         * Formats the template string containing placeholders.
+         *
+         * @param template The template string to format.
+         * @return The Builder instance for method chaining.
+         * @deprecated Use {@link #appendTemplate(String)} instead.
+         */
         @Deprecated
         public Builder format(String template) {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
@@ -114,6 +165,11 @@ public class MessageTemplate {
             return this;
         }
 
+        /**
+         * Builds and returns a MessageTemplate instance based on the current state of the builder.
+         *
+         * @return A new MessageTemplate instance.
+         */
         public MessageTemplate build() {
             Map<String, int[]> reservedPositions = new HashMap<>();
             for (Map.Entry<String, List<Integer>> entry : reservedKeywords.entrySet()) {
