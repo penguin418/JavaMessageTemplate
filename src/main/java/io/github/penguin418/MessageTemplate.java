@@ -25,18 +25,34 @@ public class MessageTemplate {
         return String.join("", resultArray);
     }
 
-    public static Builder builder() {
-        return new Builder();
+    public String getTemplate() {
+        StringBuilder templateStringBuilder = new StringBuilder();
+        Map<Integer, String> indexKeywordMap = new HashMap<>();
+        for (Map.Entry<String, int[]> entry : reservedPositions.entrySet()) {
+            String keyword = entry.getKey();
+            for (int position : entry.getValue()) {
+                indexKeywordMap.put(position, keyword);
+            }
+        }
+        for (int i = 0; i < templateArray.length; i++) {
+            if (indexKeywordMap.containsKey(i)){
+                String keyword = indexKeywordMap.get(i);
+                String defaultValue = templateArray[i];
+                if (defaultValue == null) {
+                    templateStringBuilder.append("${").append(keyword).append("}");
+                } else {
+                    templateStringBuilder.append("${").append(keyword).append(":").append(defaultValue).append("}");
+                }
+            } else {
+                templateStringBuilder.append(templateArray[i]);
+            }
+        }
+        return templateStringBuilder.toString();
     }
 
-    public static class ReservedPosition {
-        String keyword;
-        String defaultValue;
 
-        public ReservedPosition(String keyword, String defaultValue) {
-            this.keyword = keyword;
-            this.defaultValue = defaultValue;
-        }
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
@@ -76,7 +92,11 @@ public class MessageTemplate {
             return this;
         }
 
+        public Builder appendTemplate(String template) {
+            return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
+        }
 
+        @Deprecated
         public Builder format(String template) {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
         }
@@ -105,6 +125,16 @@ public class MessageTemplate {
             }
 
             return new MessageTemplate(templateList.toArray(new String[0]), reservedPositions);
+        }
+
+        private static class ReservedPosition {
+            String keyword;
+            String defaultValue;
+
+            private ReservedPosition(String keyword, String defaultValue) {
+                this.keyword = keyword;
+                this.defaultValue = defaultValue;
+            }
         }
     }
 }
