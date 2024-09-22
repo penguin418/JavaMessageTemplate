@@ -53,26 +53,19 @@ public class MessageTemplate {
             String templateItem = templateArray[i];
             if (indexKeywordMap.containsKey(i)){
                 String keyword = indexKeywordMap.get(i);
-                String defaultValue = templateItem;
-                if (defaultValue == null) {
+                if (templateItem == null) {
                     templateStringBuilder.append("${").append(keyword).append("}");
                 } else {
-                    templateStringBuilder.append("${").append(keyword).append(":").append(defaultValue).append("}");
+                    templateStringBuilder.append("${").append(keyword).append(":").append(templateItem).append("}");
                 }
             } else {
                 // Process templateItem to reconstruct escaped placeholders
-                Pattern placeholderPattern = Pattern.compile(Builder.PLACEHOLDER);
-                Matcher matcher = placeholderPattern.matcher(templateItem);
+                Matcher matcher = Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(templateItem);
                 int lastIndex = 0;
                 while (matcher.find()) {
-                    templateStringBuilder.append(templateItem.substring(lastIndex, matcher.start()));
-                    String placeholderContent = matcher.group(1);
-                    String keyword = placeholderContent.contains(":") ? placeholderContent.split(":", 2)[0] : placeholderContent;
-                    if (indexKeywordMap.containsValue(keyword)) {
-                        templateStringBuilder.append("${").append(placeholderContent).append("}");
-                    } else {
-                        templateStringBuilder.append("\\${").append(placeholderContent).append("}");
-                    }
+                    templateStringBuilder.append(templateItem, lastIndex, matcher.start());
+                    String placeholderContent = matcher.group(2);
+                    templateStringBuilder.append("\\${").append(placeholderContent).append("}");
                     lastIndex = matcher.end();
                 }
                 templateStringBuilder.append(templateItem.substring(lastIndex));
@@ -95,8 +88,6 @@ public class MessageTemplate {
      */
     public static class Builder {
 
-        static final String BACKSLASHES = "(\\\\*)";
-        static final String PLACEHOLDER = "\\$\\{((?:[^\\\\}]|\\\\.)*?)\\}";
         /**
          * Pattern to identify placeholders in the template in the format ${keyword} or ${keyword:defaultValue}.
          *  - (\\\\*) backslash
@@ -104,13 +95,13 @@ public class MessageTemplate {
          *  - ((?:[^\\\\}]|\\.)*?) anything except closing brace
          *  - \\} closing brace
          */
-        static final Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile(BACKSLASHES + PLACEHOLDER);
+        static final Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(\\\\*)\\$\\{((?:[^\\\\}]|\\\\.)*?)\\}");
 
         private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
             return (s) -> {
                 if (s.contains(":")) {
                     final String[] parted = s.split(":");
-                    String keyword = parted[0].substring(2, parted[0].length());
+                    String keyword = parted[0].substring(2);
                     String defaultValue = parted[1].substring(0, parted[1].length() - 1);
                     return new ReservedPosition(keyword, defaultValue);
                 }
