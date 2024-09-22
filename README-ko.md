@@ -31,14 +31,14 @@ Maven을 사용하는 경우 pom.xml에 다음 의존성을 추가하십시오:
 <dependency>
     <groupId>io.github.penguin418</groupId>
     <artifactId>message-template</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
 Gradle을 사용하는 경우 build.gradle에 다음 의존성을 추가하십시오:
 
 ```gradle
-implementation 'io.github.penguin418:message-template:0.1.0'
+implementation 'io.github.penguin418:message-template:0.2.0'
 ```
 
 Notice
@@ -83,7 +83,7 @@ message = template.process(Map.of("user", "John"));
 System.out.println(message); // Output: Welcome, John!
 ```
 
-### Escaping Special Characters | 특수 문자 이스케이프
+### Escaping Plaeholder pattern | 플레이스홀더 그대로 사용하기
 
 템플릿에서 플레이스홀더로 처리되지 않고 문자 그대로 `${…}`를 포함하려면, 달러 기호를 백슬래시로 이스케이프하십시오.
 
@@ -93,10 +93,8 @@ MessageTemplate template = MessageTemplate.builder()
         .build();
 
 String message = template.process(Map.of("amount", "100"));
-System.out.println(message); // Output: Price: \${amount}
+System.out.println(message); // Output: Price: ${amount}
 ```
-
-* 0.1.0버전에서는 Output에 \ 가 표기됩니다. 이 출력은 아직 고민 중인 부분으로 변경될 수 있습니다. 
 
 ### Retrieving the Original Template String | 원본 템플릿 문자열 가져오기
 
