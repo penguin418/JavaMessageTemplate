@@ -33,14 +33,14 @@ Add the following dependency to your pom.xml if you’re using Maven:
 <dependency>
     <groupId>io.github.penguin418</groupId>
     <artifactId>message-template</artifactId>
-    <version>0.1.0</version>
+    <version>0.2.0</version>
 </dependency>
 ```
 
 Add the following dependency to your gradle.build if you’re using Gradle:
 
 ```gradle
-implementation 'io.github.penguin418:message-template:0.1.0'
+implementation 'io.github.penguin418:message-template:0.2.0'
 ```
 
 Notice
@@ -86,7 +86,7 @@ message = template.process(Map.of("user", "John"));
 System.out.println(message); // Output: Welcome, John!
 ```
 
-### Escaping Special Characters
+### Escaping Plaeholder pattern
 
 To include literal `${...}` in your template without it being treated as a placeholder, escape the dollar sign with a
 backslash.
@@ -97,10 +97,8 @@ MessageTemplate template = MessageTemplate.builder()
         .build();
 
 String message = template.process(Map.of("amount", "100"));
-System.out.println(message); // Output: Price: \${amount}
+System.out.println(message); // Output: Price: ${amount}
 ```
-
-* In version 0.1.0, `\` are displayed in the output. This output is still under consideration by the library developer.
 
 ### Retrieving the Original Template String
 
