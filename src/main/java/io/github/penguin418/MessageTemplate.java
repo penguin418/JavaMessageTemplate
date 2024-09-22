@@ -50,16 +50,32 @@ public class MessageTemplate {
             }
         }
         for (int i = 0; i < templateArray.length; i++) {
+            String templateItem = templateArray[i];
             if (indexKeywordMap.containsKey(i)){
                 String keyword = indexKeywordMap.get(i);
-                String defaultValue = templateArray[i];
+                String defaultValue = templateItem;
                 if (defaultValue == null) {
                     templateStringBuilder.append("${").append(keyword).append("}");
                 } else {
                     templateStringBuilder.append("${").append(keyword).append(":").append(defaultValue).append("}");
                 }
             } else {
-                templateStringBuilder.append(templateArray[i]);
+                // Process templateItem to reconstruct escaped placeholders
+                Pattern placeholderPattern = Pattern.compile(Builder.PLACEHOLDER);
+                Matcher matcher = placeholderPattern.matcher(templateItem);
+                int lastIndex = 0;
+                while (matcher.find()) {
+                    templateStringBuilder.append(templateItem.substring(lastIndex, matcher.start()));
+                    String placeholderContent = matcher.group(1);
+                    String keyword = placeholderContent.contains(":") ? placeholderContent.split(":", 2)[0] : placeholderContent;
+                    if (indexKeywordMap.containsValue(keyword)) {
+                        templateStringBuilder.append("${").append(placeholderContent).append("}");
+                    } else {
+                        templateStringBuilder.append("\\${").append(placeholderContent).append("}");
+                    }
+                    lastIndex = matcher.end();
+                }
+                templateStringBuilder.append(templateItem.substring(lastIndex));
             }
         }
         return templateStringBuilder.toString();
@@ -78,10 +94,17 @@ public class MessageTemplate {
      * Builder class for constructing a MessageTemplate instance.
      */
     public static class Builder {
+
+        static final String BACKSLASHES = "(\\\\*)";
+        static final String PLACEHOLDER = "\\$\\{((?:[^\\\\}]|\\\\.)*?)\\}";
         /**
          * Pattern to identify placeholders in the template in the format ${keyword} or ${keyword:defaultValue}.
+         *  - (\\\\*) backslash
+         *  - \\$\\{ opening brace
+         *  - ((?:[^\\\\}]|\\.)*?) anything except closing brace
+         *  - \\} closing brace
          */
-        public static Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(?<!\\\\)\\$\\{([^}]*)}");
+        static final Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile(BACKSLASHES + PLACEHOLDER);
 
         private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
             return (s) -> {
@@ -157,8 +180,20 @@ public class MessageTemplate {
             int lastIndex = 0;
             while (matcher.find()) {
                 append(template.substring(lastIndex, matcher.start()));
-                ReservedPosition reserved = reservedPosition.apply(template.substring(matcher.start(), matcher.end()));
-                reserve(reserved.keyword, reserved.defaultValue);
+
+                String backslashes = matcher.group(1);
+                String placeholderContent = matcher.group(2);
+                int backslashCount = backslashes.length();
+
+                if (backslashCount % 2 == 0) {
+                    append(backslashes);
+                    ReservedPosition reserved = reservedPosition.apply("${" + placeholderContent + "}");
+                    reserve(reserved.keyword, reserved.defaultValue);
+                } else {
+                    // Combine backslashes and placeholder into a single string
+                    append(backslashes.substring(0, backslashCount -1) + "${" + placeholderContent + "}");
+                }
+
                 lastIndex = matcher.end();
             }
             append(template.substring(lastIndex));

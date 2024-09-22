@@ -5,6 +5,8 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -80,8 +82,18 @@ class MessageTemplateTest {
         @Test
         @DisplayName("Escaped special character should be ignored")
         void staticConstructorOfTestEscapeSpecialCharacters() {
-            MessageTemplate template = MessageTemplate.builder().appendTemplate("Lorem \\${ipsum} sit $\\${amet}, adipiscing $${elit}.").build();
-            assertEquals("Lorem \\${ipsum} sit $\\${amet}, adipiscing $100.", template.process(Map.of("elit", "100")));
+            MessageTemplate template = MessageTemplate.builder().appendTemplate("${Lorem} \\${ipsum} sit $\\${amet}, adipiscing \\\\${elit}.").build();
+            assertEquals("null ${ipsum} sit $${amet}, adipiscing \\\\ELIT.", template.process(Map.of("elit", "ELIT")));
+        }
+
+        @Test
+        @DisplayName("Ignored escaped special character should be restored by getTemplate()")
+        void staticConstructorOfTestEscapeSpecialCharacters2() {
+            MessageTemplate template = MessageTemplate.builder().appendTemplate("${Lorem} \\${ipsum} sit $\\${amet}, adipiscing \\\\${elit}.").build();
+            String templateString = template.getTemplate();
+            MessageTemplate template2 = MessageTemplate.builder().appendTemplate(templateString).build();
+
+            assertEquals("null ${ipsum} sit $${amet}, adipiscing \\\\ELIT.", template2.process(Map.of("elit", "ELIT")));
         }
 
         @Test
@@ -98,8 +110,75 @@ class MessageTemplateTest {
             assertEquals("Lorem DEFAULT1 sit DEFAULT2, adipiscing elit.", template.process(Map.of()));
             assertEquals("Lorem IPSUM sit IPSUM, adipiscing elit.", template.process(Map.of("ipsum", "IPSUM")));
         }
-    }
 
+        @Test
+        @DisplayName("Pattern should capture placeHolder inside brace start with $")
+        public void patternTest(){
+            String placeHolder = "PLACEHOLDER";
+            String text = "hello ${PLACEHOLDER}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals(placeHolder, matcher.group(2));
+        }
+
+        @Test
+        @DisplayName("Pattern should capture keyword and default value inside braces")
+        public void patternTest2(){
+            String placeHolder = "KEYWORD:DEFAULT";
+            String text = "hello ${KEYWORD:DEFAULT}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals(placeHolder, matcher.group(2));
+        }
+
+        @Test
+        @DisplayName("Pattern should capture escaped closing braces in placeholder")
+        public void patternTest3(){
+            String placeHolder = "KEYWORD:DEFAULT\\}";
+            String text = "hello ${KEYWORD:DEFAULT\\}}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals(placeHolder, matcher.group(2));
+        }
+
+        @Test
+        @DisplayName("Pattern should capture escaped backslashes in placeholder")
+        public void patternTest4(){
+            String placeHolder = "KEYWORD:DEFAULT\\\\";
+            String text = "hello ${KEYWORD:DEFAULT\\\\}}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals(placeHolder, matcher.group(2));
+        }
+
+        @Test
+        @DisplayName("Escaped dollar signs should not be processed as placeholders")
+        public void patternTest5(){
+            String placeHolder = "KEYWORD:DEFAULT";
+            String text = "hello \\${KEYWORD:DEFAULT}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals("\\", matcher.group(1));
+            assertEquals(placeHolder, matcher.group(2));
+        }
+
+        @Test
+        @DisplayName("Double backslashes should be ignored")
+        public void patternTest6(){
+            String placeHolder = "KEYWORD:DEFAULT";
+            String text = "hello \\\\${KEYWORD:DEFAULT}";
+            Matcher matcher = MessageTemplate.Builder.CURLY_BRACE_RESERVED_POSITION_PATTERN.matcher(text);
+
+            assertTrue(matcher.find());
+            assertEquals("\\\\", matcher.group(1));
+            assertEquals(placeHolder, matcher.group(2));
+        }
+    }
 
     @Nested
     public class PerformanceTest {
