@@ -4,19 +4,20 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Templated Messages with placeholders.
  * Placeholders can be replaced with actual values at runtime.
  */
 public class MessageTemplate {
-    private final String[] templateArray;
-    private final Map<String, int[]> reservedPositions;
+    private final String[] segmentArray;
+    private final Map<String, int[]> keywordToPositionArray;
 
 
-    private MessageTemplate(String[] templateArray, Map<String, int[]> reservedPositions) {
-        this.templateArray = templateArray;
-        this.reservedPositions = reservedPositions;
+    private MessageTemplate(String[] segmentArray, Map<String, int[]> keywordToPositionArray) {
+        this.segmentArray = segmentArray;
+        this.keywordToPositionArray = keywordToPositionArray;
     }
 
     /**
@@ -26,11 +27,13 @@ public class MessageTemplate {
      * @return The processed template as a String with placeholders replaced.
      */
     public String process(Map<String, String> replacements) {
-        String[] resultArray = new String[templateArray.length];
-        System.arraycopy(templateArray, 0, resultArray, 0, templateArray.length);
+        String[] resultArray = new String[segmentArray.length];
+        System.arraycopy(segmentArray, 0, resultArray, 0, segmentArray.length);
         replacements.forEach((key, value) -> {
-            if (reservedPositions.containsKey(key)) for (int position : reservedPositions.get(key))
-                resultArray[position] = value;
+            if (keywordToPositionArray.containsKey(key)) {
+                for (int position : keywordToPositionArray.get(key))
+                    resultArray[position] = value;
+            }
         });
         return String.join("", resultArray);
     }
@@ -43,15 +46,15 @@ public class MessageTemplate {
     public String getTemplate() {
         StringBuilder templateStringBuilder = new StringBuilder();
         Map<Integer, String> indexKeywordMap = new HashMap<>();
-        for (Map.Entry<String, int[]> entry : reservedPositions.entrySet()) {
+        for (Map.Entry<String, int[]> entry : keywordToPositionArray.entrySet()) {
             String keyword = entry.getKey();
             for (int position : entry.getValue()) {
                 indexKeywordMap.put(position, keyword);
             }
         }
-        for (int i = 0; i < templateArray.length; i++) {
-            String templateItem = templateArray[i];
-            if (indexKeywordMap.containsKey(i)){
+        for (int i = 0; i < segmentArray.length; i++) {
+            String templateItem = segmentArray[i];
+            if (indexKeywordMap.containsKey(i)) {
                 String keyword = indexKeywordMap.get(i);
                 if (templateItem == null) {
                     templateStringBuilder.append("${").append(keyword).append("}");
@@ -90,57 +93,57 @@ public class MessageTemplate {
 
         /**
          * Pattern to identify placeholders in the template in the format ${keyword} or ${keyword:defaultValue}.
-         *  - (\\\\*) backslash
-         *  - \\$\\{ opening brace
-         *  - ((?:[^\\\\}]|\\.)*?) anything except closing brace
-         *  - \\} closing brace
+         * - (\\\\*) backslash
+         * - \\$\\{ opening brace
+         * - ((?:[^\\\\}]|\\.)*?) anything except closing brace
+         * - \\} closing brace
          */
         static final Pattern CURLY_BRACE_RESERVED_POSITION_PATTERN = Pattern.compile("(\\\\*)\\$\\{((?:[^\\\\}]|\\\\.)*?)\\}");
 
-        private static Function<String, ReservedPosition> CURLY_BRACE_RESERVED_POSITION_PARSER() {
+        private static Function<String, Placeholder> CURLY_BRACE_RESERVED_POSITION_PARSER() {
             return (s) -> {
                 if (s.contains(":")) {
                     final String[] parted = s.split(":");
                     String keyword = parted[0].substring(2);
                     String defaultValue = parted[1].substring(0, parted[1].length() - 1);
-                    return new ReservedPosition(keyword, defaultValue);
+                    return new Placeholder(keyword, defaultValue);
                 }
-                return new ReservedPosition(s.substring(2, s.length() - 1), null);
+                return new Placeholder(s.substring(2, s.length() - 1), null);
             };
         }
 
-        private final List<String> templateList = new ArrayList<>();
-        private final Map<String, List<Integer>> reservedKeywords = new HashMap<>();
+        private final List<String> segmentList = new ArrayList<>();
+        private final Map<String, List<Integer>> keywordToPositionList = new HashMap<>();
         private String lastAppended = null;
 
         /**
          * Appends a string to the template.
          *
-         * @param str The string to append.
+         * @param raw The string to append.
          * @return The Builder instance for method chaining.
          */
-        public Builder append(String str) {
+        public Builder append(String raw) {
             if (lastAppended != null) {
-                lastAppended = lastAppended + str;
-                templateList.set(templateList.size() - 1, lastAppended);
+                lastAppended = lastAppended + raw;
+                segmentList.set(segmentList.size() - 1, lastAppended);
             } else {
-                lastAppended = str;
-                templateList.add(lastAppended);
+                lastAppended = raw;
+                segmentList.add(lastAppended);
             }
             return this;
         }
 
         /**
-         * Reserves a placeholder in the template with a keyword and default value.
+         * Reserves a placeholder in the template with a placeholder and default value.
          *
-         * @param keyword      The placeholder keyword.
+         * @param keyword      The reserved keyword for placeholder.
          * @param defaultValue The default value for the placeholder.
          * @return The Builder instance for method chaining.
          */
         public Builder reserve(String keyword, String defaultValue) {
             lastAppended = null;
-            templateList.add(defaultValue);
-            reservedKeywords.computeIfAbsent(keyword, (v) -> new ArrayList<>()).add(templateList.size() - 1);
+            segmentList.add(defaultValue);
+            keywordToPositionList.computeIfAbsent(keyword, (v) -> new ArrayList<>()).add(segmentList.size() - 1);
             return this;
         }
 
@@ -166,7 +169,7 @@ public class MessageTemplate {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
         }
 
-        private Builder format(String template, Pattern reservedPattern, Function<String, ReservedPosition> reservedPosition) {
+        private Builder format(String template, Pattern reservedPattern, Function<String, Placeholder> reservedPosition) {
             Matcher matcher = reservedPattern.matcher(template);
             int lastIndex = 0;
             while (matcher.find()) {
@@ -178,11 +181,11 @@ public class MessageTemplate {
 
                 if (backslashCount % 2 == 0) {
                     append(backslashes);
-                    ReservedPosition reserved = reservedPosition.apply("${" + placeholderContent + "}");
+                    Placeholder reserved = reservedPosition.apply("${" + placeholderContent + "}");
                     reserve(reserved.keyword, reserved.defaultValue);
                 } else {
                     // Combine backslashes and placeholder into a single string
-                    append(backslashes.substring(0, backslashCount -1) + "${" + placeholderContent + "}");
+                    append(backslashes.substring(0, backslashCount - 1) + "${" + placeholderContent + "}");
                 }
 
                 lastIndex = matcher.end();
@@ -198,7 +201,7 @@ public class MessageTemplate {
          */
         public MessageTemplate build() {
             Map<String, int[]> reservedPositions = new HashMap<>();
-            for (Map.Entry<String, List<Integer>> entry : reservedKeywords.entrySet()) {
+            for (Map.Entry<String, List<Integer>> entry : keywordToPositionList.entrySet()) {
                 int[] positions = new int[entry.getValue().size()];
                 for (int i = 0; i < entry.getValue().size(); i++) {
                     positions[i] = entry.getValue().get(i);
@@ -206,14 +209,14 @@ public class MessageTemplate {
                 reservedPositions.put(entry.getKey(), positions);
             }
 
-            return new MessageTemplate(templateList.toArray(new String[0]), reservedPositions);
+            return new MessageTemplate(segmentList.toArray(new String[0]), reservedPositions);
         }
 
-        private static class ReservedPosition {
+        private static class Placeholder {
             String keyword;
             String defaultValue;
 
-            private ReservedPosition(String keyword, String defaultValue) {
+            private Placeholder(String keyword, String defaultValue) {
                 this.keyword = keyword;
                 this.defaultValue = defaultValue;
             }
