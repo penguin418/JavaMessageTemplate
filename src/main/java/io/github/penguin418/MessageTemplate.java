@@ -157,6 +157,19 @@ public class MessageTemplate {
             return format(template, CURLY_BRACE_RESERVED_POSITION_PATTERN, CURLY_BRACE_RESERVED_POSITION_PARSER());
         }
 
+        public Builder appendTemplate(MessageTemplate template) {
+            Map<Integer, String> reserved = template.keywordToPositionArray.entrySet().stream().flatMap(kv -> Arrays.stream(kv.getValue()).mapToObj(v -> Map.entry(v, kv.getKey()))).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+            for (int i = 0; i < template.segmentArray.length; i++) {
+                if (reserved.containsKey(i)) {
+                    reserve(reserved.get(i), template.segmentArray[i]);
+                } else {
+                    appendTemplate(template.segmentArray[i]);
+                }
+            }
+            return this;
+        }
+
         /**
          * Formats the template string containing placeholders.
          *
