@@ -112,6 +112,27 @@ class MessageTemplateTest {
         }
 
         @Test
+        @DisplayName("MessageTemplates can be joined by appendTemplate")
+        void test12(){
+            String string1 = "Lorem ${ipsum:DEFAULT1} sit ${ipsum:DEFAULT2}, adipiscing elit.";
+            String string2 = "Lorem ipsum ${ipsum:DEFAULT3}. ";
+            MessageTemplate template1 = MessageTemplate.builder().appendTemplate(string1).build();
+            MessageTemplate template2 = MessageTemplate.builder().appendTemplate(string2).appendTemplate(template1).build();
+
+            assertEquals(string2+string1,template2.getTemplate());
+        }
+        @Test
+        @DisplayName("MessageTemplates can be joined by appendTemplate (reverse order)")
+        void test13(){
+            String string1 = "Lorem ${ipsum:DEFAULT1} sit ${ipsum:DEFAULT2}, adipiscing elit.";
+            String string2 = "Lorem ipsum ${ipsum:DEFAULT3}. ";
+            MessageTemplate template1 = MessageTemplate.builder().appendTemplate(string1).build();
+            MessageTemplate template2 = MessageTemplate.builder().appendTemplate(template1).appendTemplate(string2).build();
+
+            assertEquals(string1+string2,template2.getTemplate());
+        }
+
+        @Test
         @DisplayName("Pattern should capture placeHolder inside brace start with $")
         public void patternTest(){
             String placeHolder = "PLACEHOLDER";
